@@ -39,11 +39,7 @@ class HtmlToPdf
         $request = $request->html(Stream::string('index.html', $html));
 
         if ($save) {
-            $dir = sys_get_temp_dir();
-            if (is_dir('/dev/shm')) {
-                $dir = '/dev/shm';
-            }
-            $dir .= DIRECTORY_SEPARATOR;
+            $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR;
 
             return $dir . Gotenberg::save($request, $dir);
         }
