@@ -1,0 +1,42 @@
+{
+    "name": "whitedigital-eu/document-generator-bundle",
+    "description": "Document generator",
+    "type": "symfony-bundle",
+    "keywords": [
+        "document",
+        "generator",
+        "document-generator",
+        "php",
+        "symfony",
+        "symfony-bundle"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": ">=8.2.0"
+    },
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "*",
+        "roave/security-advisories": "dev-latest",
+        "whitedigital-eu/config-pack": "^2.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "WhiteDigital\\DocumentGeneratorBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "WhiteDigital\\DocumentGeneratorBundle\\Tests\\Source\\": "tests/src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "0.1.x-dev"
+        }
+    }
+}
