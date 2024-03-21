@@ -6,6 +6,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use WhiteDigital\EntityResourceMapper\Entity\BaseEntity;
 use WhiteDigital\EntityResourceMapper\Entity\Traits\Id;
+use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'wd_document')]
@@ -16,17 +17,14 @@ class Document extends BaseEntity
     #[ORM\Column]
     private ?string $type = null;
 
-    #[ORM\Column]
-    private ?string $contentType = null;
-
     #[ORM\Column(type: Types::JSON)]
     private ?array $sourceData = null;
 
     #[ORM\Column(type: Types::JSON)]
     private ?array $templateData = null;
 
-    #[ORM\Column]
-    private ?string $filePath = null;
+    #[ORM\ManyToOne]
+    private ?StorageItem $file = null;
 
     public function getType(): ?string
     {
@@ -64,26 +62,14 @@ class Document extends BaseEntity
         return $this;
     }
 
-    public function getFilePath(): ?string
+    public function getFile(): ?StorageItem
     {
-        return $this->filePath;
+        return $this->file;
     }
 
-    public function setFilePath(?string $filePath): self
+    public function setFile(?StorageItem $file): self
     {
-        $this->filePath = $filePath;
-
-        return $this;
-    }
-
-    public function getContentType(): ?string
-    {
-        return $this->contentType;
-    }
-
-    public function setContentType(?string $contentType): self
-    {
-        $this->contentType = $contentType;
+        $this->file = $file;
 
         return $this;
     }
