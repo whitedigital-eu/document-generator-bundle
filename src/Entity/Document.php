@@ -4,12 +4,15 @@ namespace WhiteDigital\DocumentGeneratorBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use WhiteDigital\DocumentGeneratorBundle\Api\Resource\DocumentResource;
+use WhiteDigital\EntityResourceMapper\Attribute\Mapping;
 use WhiteDigital\EntityResourceMapper\Entity\BaseEntity;
 use WhiteDigital\EntityResourceMapper\Entity\Traits\Id;
 use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'wd_document')]
+#[Mapping(DocumentResource::class)]
 class Document extends BaseEntity
 {
     use Id;
@@ -22,6 +25,9 @@ class Document extends BaseEntity
 
     #[ORM\Column(type: Types::JSON)]
     private ?array $templateData = null;
+
+    #[ORM\Column]
+    private ?string $templatePath = null;
 
     #[ORM\ManyToOne]
     private ?StorageItem $file = null;
@@ -70,6 +76,18 @@ class Document extends BaseEntity
     public function setFile(?StorageItem $file): self
     {
         $this->file = $file;
+
+        return $this;
+    }
+
+    public function getTemplatePath(): ?string
+    {
+        return $this->templatePath;
+    }
+
+    public function setTemplatePath(?string $templatePath): self
+    {
+        $this->templatePath = $templatePath;
 
         return $this;
     }

@@ -4,5 +4,5 @@ namespace WhiteDigital\DocumentGeneratorBundle\Contracts;
 
 interface Transformer
 {
-    public function getTransformedFields(array $fields): array;
+    public function getTransformedFields(mixed $input): array;
 }
