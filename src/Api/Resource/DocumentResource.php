@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php declare(strict_types = 1);
 
 namespace WhiteDigital\DocumentGeneratorBundle\Api\Resource;
 
@@ -6,6 +6,7 @@ use ApiPlatform\Metadata\ApiFilter;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Link;
 use ApiPlatform\Serializer\Filter\GroupFilter;
 use DateTimeImmutable;
 use Symfony\Component\Serializer\Annotation\Groups;
@@ -22,9 +23,16 @@ use WhiteDigital\StorageItemResource\Api\Resource\StorageItemResource;
             requirements: ['id' => '\d+', ],
             write: false,
         ),
+        new Get(
+            uriTemplate: '/documents/{id}/generate',
+            uriVariables: [
+                'id' => new Link(fromProperty: 'id', fromClass: self::class, identifiers: ['id']),
+            ],
+            name: 'generate',
+        ),
     ],
     normalizationContext: ['groups' => [self::READ, ]],
-    provider: DocumentDataProvider::class
+    provider: DocumentDataProvider::class,
 )]
 #[ApiFilter(GroupFilter::class, arguments: ['parameterName' => 'groups', 'overrideDefaultGroups' => false, ]),]
 #[Mapping(Document::class)]
@@ -49,6 +57,9 @@ class DocumentResource extends BaseResource
 
     #[Groups([self::READ, ])]
     public ?StorageItemResource $file = null;
+
+    #[Groups([self::READ, ])]
+    public ?string $templatePath = null;
 
     #[Groups([self::READ, ])]
     public ?DateTimeImmutable $createdAt = null;
