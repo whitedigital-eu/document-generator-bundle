@@ -14,8 +14,8 @@ use function array_merge_recursive;
 
 class DocumentGeneratorBundle extends AbstractBundle
 {
-    use DefineOrmMappings;
     use DefineApiPlatformMappings;
+    use DefineOrmMappings;
 
     private const MAPPINGS = [
         'type' => 'attribute',
@@ -54,15 +54,6 @@ class DocumentGeneratorBundle extends AbstractBundle
         return array_merge_recursive(...$builder->getExtensionConfig($package));
     }
 
-    private function configureApiPlatformExtension(ContainerConfigurator $container, array $extensionConfig): void
-    {
-        if (!array_key_exists('custom_api_resource_path', $extensionConfig)) {
-            $this->addApiPlatformPaths($container, [self::API_RESOURCE_PATH]);
-        } elseif (!empty($extensionConfig['custom_api_resource_path'])) {
-            $this->addApiPlatformPaths($container, [$extensionConfig['custom_api_resource_path']]);
-        }
-    }
-
     public function configure(DefinitionConfigurator $definition): void
     {
         $definition
@@ -72,5 +63,14 @@ class DocumentGeneratorBundle extends AbstractBundle
                 ->scalarNode('entity_manager')->defaultValue('default')->end()
                 ->scalarNode('custom_api_resource_path')->defaultNull()->end()
             ->end();
+    }
+
+    private function configureApiPlatformExtension(ContainerConfigurator $container, array $extensionConfig): void
+    {
+        if (!array_key_exists('custom_api_resource_path', $extensionConfig)) {
+            $this->addApiPlatformPaths($container, [self::API_RESOURCE_PATH]);
+        } elseif (!empty($extensionConfig['custom_api_resource_path'])) {
+            $this->addApiPlatformPaths($container, [$extensionConfig['custom_api_resource_path']]);
+        }
     }
 }
