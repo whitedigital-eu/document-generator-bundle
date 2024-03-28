@@ -16,9 +16,11 @@ interface Task
 
     public function getOptionalFields(): array;
 
-    public function generate(): Document;
+    public function generate(mixed $input): Document;
 
     public function getTemplatePath(): string;
 
     public function getType(): string;
+
+    public function getInputType(): string;
 }

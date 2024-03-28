@@ -4,12 +4,15 @@ namespace WhiteDigital\DocumentGeneratorBundle\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use WhiteDigital\DocumentGeneratorBundle\Api\Resource\DocumentResource;
+use WhiteDigital\EntityResourceMapper\Attribute\Mapping;
 use WhiteDigital\EntityResourceMapper\Entity\BaseEntity;
 use WhiteDigital\EntityResourceMapper\Entity\Traits\Id;
 use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
 #[ORM\Entity]
 #[ORM\Table(name: 'wd_document')]
+#[Mapping(DocumentResource::class)]
 class Document extends BaseEntity
 {
     use Id;
