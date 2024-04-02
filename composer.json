@@ -12,7 +12,20 @@
     ],
     "license": "MIT",
     "require": {
-        "php": ">=8.2.0"
+        "php": ">=8.2.0",
+        "api-platform/core": "^3.2",
+        "doctrine/dbal": "*",
+        "doctrine/orm": "*",
+        "gotenberg/gotenberg-php": "*",
+        "symfony/config": "*",
+        "symfony/dependency-injection": "*",
+        "symfony/http-kernel": "*",
+        "symfony/serializer": "*",
+        "symfony/service-contracts": "*",
+        "twig/twig": "^3.8",
+        "vich/uploader-bundle": "*",
+        "whitedigital-eu/entity-resource-mapper-bundle": "^0.24",
+        "whitedigital-eu/storage-item-resource": "^0.3"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "*",
@@ -22,11 +35,6 @@
     "autoload": {
         "psr-4": {
             "WhiteDigital\\DocumentGeneratorBundle\\": "src/"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "WhiteDigital\\DocumentGeneratorBundle\\Tests\\Source\\": "tests/src/"
         }
     },
     "minimum-stability": "dev",
