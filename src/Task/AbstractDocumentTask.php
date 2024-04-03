@@ -11,14 +11,18 @@ use WhiteDigital\DocumentGeneratorBundle\Contracts\Transformer;
 use WhiteDigital\DocumentGeneratorBundle\Entity\Document;
 use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
+use function array_diff;
+use function array_diff_key;
+use function array_flip;
+use function array_keys;
 use function array_merge;
 use function count;
-use function dump;
 use function get_debug_type;
 use function implode;
 use function is_array;
 use function ltrim;
 use function preg_match_all;
+use function sprintf;
 
 abstract class AbstractDocumentTask implements Task
 {
@@ -39,7 +43,7 @@ abstract class AbstractDocumentTask implements Task
     {
         $this->input = $input;
         if (get_debug_type($input) !== $this->getInputType()) {
-            throw new InvalidArgumentException();
+            throw new InvalidArgumentException(sprintf('Incompatible input type. Expected: "%s", got: "%s"', $this->getInputType(), get_debug_type($input)));
         }
 
         $data = $this->getTransformer()->getTransformedFields($input);
@@ -50,13 +54,18 @@ abstract class AbstractDocumentTask implements Task
             ->setTemplate($this->getTemplatePath())
             ->generate();
 
-        $storageItem = (new StorageItem())
-            ->setFile(new ReplacingFile($result));
+        $storageItem = (new StorageItem())->setFile(new ReplacingFile($result));
         $this->em->persist($storageItem);
+
+        $sourceFields = array_merge($this->getRequiredFields(), $this->getOptionalFields());
+        $sourceDump = self::makeOneDimension($sourceFields, onlyLast: true);
+        $dataDump = self::makeOneDimension($data, onlyLast: true);
+        $extraKeys = array_diff(array_keys($sourceDump), array_keys($dataDump));
+        $sourceDump = array_diff_key($sourceDump, array_flip($extraKeys));
 
         $document = (new Document())
             ->setType($this->getType())
-            ->setSourceData(array_merge($this->getRequiredFields(), $this->getOptionalFields()))
+            ->setSourceData(self::unpack($sourceDump))
             ->setTemplateData($data)
             ->setFile($storageItem)
             ->setTemplatePath($this->getTemplatePath());
@@ -82,27 +91,6 @@ abstract class AbstractDocumentTask implements Task
         return $this->transformer;
     }
 
-    public static function makeOneDimension(array $array, string $base = '', string $separator = '.', bool $onlyLast = false, int $depth = 0, int $maxDepth = PHP_INT_MAX, array $result = []): array
-    {
-        if ($depth <= $maxDepth) {
-            foreach ($array as $key => $value) {
-                $key = ltrim(string: $base . '.' . $key, characters: '.');
-
-                if (self::isAssociative(array: $value)) {
-                    $result = self::makeOneDimension(array: $value, base: $key, separator: $separator, onlyLast: $onlyLast, depth: $depth + 1, maxDepth: $maxDepth, result: $result);
-
-                    if ($onlyLast) {
-                        continue;
-                    }
-                }
-
-                $result[$key] = $value;
-            }
-        }
-
-        return $result;
-    }
-
     public function getInput(): mixed
     {
         return $this->input;
@@ -121,7 +109,7 @@ abstract class AbstractDocumentTask implements Task
 
         foreach ($dataDump as $key => $value) {
             $check = $key;
-            if (preg_match('/[0-9]/', $check) > 0) {
+            if (preg_match('/\.\d+\./', $check) && preg_match('/[0-9]/', $check) > 0) {
                 preg_match_all('/\d+/', $check, $matches);
                 $check = preg_replace("/\d/", '0', $check);
                 if ('0' !== $matches[0][0]) {
@@ -134,25 +122,72 @@ abstract class AbstractDocumentTask implements Task
             }
 
             if (get_debug_type($value) !== $fullDump[$check]) {
-                dump(get_debug_type($value), $fullDump[$check]);
-                exit;
-                throw new InvalidArgumentException();
+                throw new InvalidArgumentException(sprintf('Incompatible input type. Expected "%s", got "%s"', $fullDump[$check], get_debug_type($value)));
             }
+
             $count += (int) isset($requiredDump[$check]);
         }
 
         if ($requiredCount !== $count) {
-            throw new InvalidArgumentException();
+            throw new InvalidArgumentException(sprintf('Missing required fields: "%s"', implode(', ', array_diff(array_keys($requiredDump), array_keys($dataDump)))));
         }
 
         if ([] !== $invalid) {
-            throw new InvalidArgumentException(implode(', ', $invalid));
+            throw new InvalidArgumentException(sprintf('Invalid mapping found: "%s"', implode(', ', $invalid)));
         }
+    }
+
+    /*
+     * unpack one-dimensional array into multi-dimensional array
+     * ['one.two.three' => 'four'] becomes ['one' => ['two' => ['three' => 'four']]]
+     */
+    private static function unpack(array $oneDimension): array
+    {
+        $multiDimension = [];
+
+        foreach ($oneDimension as $key => $value) {
+            $path = explode('.', $key);
+            $temp = &$multiDimension;
+            foreach ($path as $segment) {
+                if (!isset($temp[$segment])) {
+                    $temp[$segment] = [];
+                }
+                $temp = &$temp[$segment];
+            }
+            $temp = $value;
+        }
+
+        return $multiDimension;
+    }
+
+    /*
+     * Merge multi-dimensional array into one-dimensional array
+     * ['one' => ['two' => ['three' => 'four']]] becomes ['one.two.three' => 'four']
+     */
+    private static function makeOneDimension(array $array, string $base = '', string $separator = '.', bool $onlyLast = false, int $depth = 0, int $maxDepth = PHP_INT_MAX, array $result = []): array
+    {
+        if ($depth <= $maxDepth) {
+            foreach ($array as $key => $value) {
+                $key = ltrim($base . '.' . $key, '.');
+
+                if (self::isAssociative($value)) {
+                    $result = self::makeOneDimension($value, $key, $separator, $onlyLast, $depth + 1, $maxDepth, $result);
+
+                    if ($onlyLast) {
+                        continue;
+                    }
+                }
+
+                $result[$key] = $value;
+            }
+        }
+
+        return $result;
     }
 
     private static function isAssociative(mixed $array): bool
     {
-        if (!is_array(value: $array) || [] === $array) {
+        if (!is_array($array) || [] === $array) {
             return false;
         }
 

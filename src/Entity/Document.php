@@ -11,7 +11,7 @@ use WhiteDigital\EntityResourceMapper\Entity\Traits\Id;
 use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
 #[ORM\Entity]
-#[ORM\Table(name: 'wd_document')]
+#[ORM\Table(name: 'document', schema: 'whitedigital')]
 #[Mapping(DocumentResource::class)]
 class Document extends BaseEntity
 {
