@@ -137,6 +137,10 @@ abstract class AbstractDocumentTask implements Task
         }
     }
 
+    /*
+     * unpack one-dimensional array into multi-dimensional array
+     * ['one.two.three' => 'four'] becomes ['one' => ['two' => ['three' => 'four']]]
+     */
     private static function unpack(array $oneDimension): array
     {
         $multiDimension = [];
