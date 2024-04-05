@@ -16,6 +16,7 @@ use function array_diff_key;
 use function array_flip;
 use function array_keys;
 use function array_merge;
+use function array_merge_recursive;
 use function count;
 use function get_debug_type;
 use function implode;
@@ -100,7 +101,7 @@ abstract class AbstractDocumentTask implements Task
     {
         $count = 0;
         $invalid = [];
-        $fullData = array_merge($this->getRequiredFields(), $this->getOptionalFields());
+        $fullData = array_merge_recursive($this->getRequiredFields(), $this->getOptionalFields());
 
         $dataDump = self::makeOneDimension($data, onlyLast: true);
         $fullDump = self::makeOneDimension($fullData, onlyLast: true);
@@ -112,7 +113,7 @@ abstract class AbstractDocumentTask implements Task
             if (preg_match('/\.\d+\./', $check) && preg_match('/[0-9]/', $check) > 0) {
                 preg_match_all('/\d+/', $check, $matches);
                 $check = preg_replace("/\d/", '0', $check);
-                if ('0' !== $matches[0][0]) {
+                if ('0' !== $matches[0][0] && isset($requiredDump[$check])) {
                     $requiredCount++;
                 }
             }
@@ -128,12 +129,12 @@ abstract class AbstractDocumentTask implements Task
             $count += (int) isset($requiredDump[$check]);
         }
 
-        if ($requiredCount !== $count) {
-            throw new InvalidArgumentException(sprintf('Missing required fields: "%s"', implode(', ', array_diff(array_keys($requiredDump), array_keys($dataDump)))));
-        }
-
         if ([] !== $invalid) {
             throw new InvalidArgumentException(sprintf('Invalid mapping found: "%s"', implode(', ', $invalid)));
+        }
+
+        if ($requiredCount !== $count) {
+            throw new InvalidArgumentException(sprintf('Missing required fields: "%s"', implode(', ', array_diff(array_keys($requiredDump), array_keys($dataDump)))));
         }
     }
 
