@@ -19,7 +19,7 @@ class DocumentTask extends AbstractDocumentTask
         parent::__construct($em, $generator, $transformer);
     }
 
-    public function getRequiredFields(): array
+    public function getTransformerFields(): array
     {
         return $this->getInput()->getSourceData();
     }

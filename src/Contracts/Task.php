@@ -12,9 +12,7 @@ interface Task
 
     public function getTransformer(): Transformer;
 
-    public function getRequiredFields(): array;
-
-    public function getOptionalFields(): array;
+    public function getTransformerFields(): array;
 
     public function generate(mixed $input): Document;
 
