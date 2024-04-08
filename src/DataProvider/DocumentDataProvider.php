@@ -22,6 +22,11 @@ class DocumentDataProvider extends AbstractDataProvider
         $this->task = $task;
     }
 
+    /**
+     * @throws ReflectionException
+     * @throws ExceptionInterface
+     * @throws ResourceClassNotFoundException
+     */
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
         if ('generate' === $operation->getName()) {
@@ -41,6 +46,11 @@ class DocumentDataProvider extends AbstractDataProvider
         return DocumentResource::create($entity, $context);
     }
 
+    /**
+     * @throws ReflectionException
+     * @throws ExceptionInterface
+     * @throws ResourceClassNotFoundException
+     */
     private function receipt(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
         $entity = $this->entityManager->find($this->getEntityClass($operation), $uriVariables['id']);

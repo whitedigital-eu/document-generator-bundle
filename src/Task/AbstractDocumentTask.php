@@ -15,7 +15,6 @@ use function array_diff;
 use function array_diff_key;
 use function array_flip;
 use function array_keys;
-use function array_merge;
 use function count;
 use function get_debug_type;
 use function implode;
@@ -57,8 +56,7 @@ abstract class AbstractDocumentTask implements Task
         $storageItem = (new StorageItem())->setFile(new ReplacingFile($result));
         $this->em->persist($storageItem);
 
-        $sourceFields = array_merge($this->getRequiredFields(), $this->getOptionalFields());
-        $sourceDump = self::makeOneDimension($sourceFields, onlyLast: true);
+        $sourceDump = self::makeOneDimension($this->getTransformerFields(), onlyLast: true);
         $dataDump = self::makeOneDimension($data, onlyLast: true);
         $extraKeys = array_diff(array_keys($sourceDump), array_keys($dataDump));
         $sourceDump = array_diff_key($sourceDump, array_flip($extraKeys));
@@ -74,11 +72,6 @@ abstract class AbstractDocumentTask implements Task
         $this->em->flush();
 
         return $document;
-    }
-
-    public function getOptionalFields(): array
-    {
-        return [];
     }
 
     public function getGenerator(): Generator
@@ -100,19 +93,17 @@ abstract class AbstractDocumentTask implements Task
     {
         $count = 0;
         $invalid = [];
-        $fullData = array_merge($this->getRequiredFields(), $this->getOptionalFields());
 
         $dataDump = self::makeOneDimension($data, onlyLast: true);
-        $fullDump = self::makeOneDimension($fullData, onlyLast: true);
-        $requiredDump = self::makeOneDimension($this->getRequiredFields(), onlyLast: true);
-        $requiredCount = count($requiredDump);
+        $fullDump = self::makeOneDimension($this->getTransformerFields(), onlyLast: true);
+        $requiredCount = count($fullDump);
 
         foreach ($dataDump as $key => $value) {
             $check = $key;
             if (preg_match('/\.\d+\./', $check) && preg_match('/[0-9]/', $check) > 0) {
                 preg_match_all('/\d+/', $check, $matches);
                 $check = preg_replace("/\d/", '0', $check);
-                if ('0' !== $matches[0][0]) {
+                if ('0' !== $matches[0][0] && isset($fullDump[$check])) {
                     $requiredCount++;
                 }
             }
@@ -125,15 +116,15 @@ abstract class AbstractDocumentTask implements Task
                 throw new InvalidArgumentException(sprintf('Incompatible input type. Expected "%s", got "%s"', $fullDump[$check], get_debug_type($value)));
             }
 
-            $count += (int) isset($requiredDump[$check]);
-        }
-
-        if ($requiredCount !== $count) {
-            throw new InvalidArgumentException(sprintf('Missing required fields: "%s"', implode(', ', array_diff(array_keys($requiredDump), array_keys($dataDump)))));
+            $count += (int) isset($fullDump[$check]);
         }
 
         if ([] !== $invalid) {
             throw new InvalidArgumentException(sprintf('Invalid mapping found: "%s"', implode(', ', $invalid)));
+        }
+
+        if ($requiredCount !== $count) {
+            throw new InvalidArgumentException(sprintf('Missing required fields: "%s"', implode(', ', array_diff(array_keys($fullDump), array_keys($dataDump)))));
         }
     }
 
