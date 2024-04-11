@@ -14,13 +14,16 @@ use WhiteDigital\StorageItemResource\Entity\StorageItem;
 use function array_diff;
 use function array_diff_key;
 use function array_flip;
+use function array_key_exists;
 use function array_keys;
 use function count;
 use function get_debug_type;
 use function implode;
 use function is_array;
 use function ltrim;
+use function preg_match;
 use function preg_match_all;
+use function preg_replace;
 use function sprintf;
 
 abstract class AbstractDocumentTask implements Task
@@ -121,6 +124,17 @@ abstract class AbstractDocumentTask implements Task
 
         if ([] !== $invalid) {
             throw new InvalidArgumentException(sprintf('Invalid mapping found: "%s"', implode(', ', $invalid)));
+        }
+
+        foreach ($fullDump as $key => $value) {
+            $check = $key;
+            if (preg_match('/\.\d+\./', $check) && preg_match('/[0-9]/', $check) > 0) {
+                preg_match_all('/\d+/', $check, $matches);
+                $check = preg_replace("/\d/", '0', $check);
+                if (!array_key_exists($check, $dataDump)) {
+                    $requiredCount--;
+                }
+            }
         }
 
         if ($requiredCount !== $count) {
