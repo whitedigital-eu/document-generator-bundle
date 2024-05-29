@@ -54,6 +54,7 @@ abstract class AbstractDocumentTask implements Task
         $result = $this->getGenerator()
             ->setData($data)
             ->setTemplate($this->getTemplatePath())
+            ->setGeneratorContext($this->getGeneratorContext())
             ->generate();
 
         $storageItem = (new StorageItem())->setFile(new ReplacingFile($result));
@@ -80,6 +81,11 @@ abstract class AbstractDocumentTask implements Task
     public function getGenerator(): Generator
     {
         return $this->generator;
+    }
+
+    public function getGeneratorContext(): mixed
+    {
+        return null;
     }
 
     public function getTransformer(): Transformer

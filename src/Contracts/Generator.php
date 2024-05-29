@@ -9,4 +9,9 @@ interface Generator
     public function setTemplate(string $template): self;
 
     public function setData(array $data): self;
+
+    /**
+     * Allows to set generator-specific context.
+     */
+    public function setGeneratorContext(mixed $context): self;
 }
