@@ -13,5 +13,5 @@ interface Generator
     /**
      * Allows to set generator-specific context.
      */
-    public function setGeneratorContext(mixed $context): self;
+    public function setGeneratorContext(?GeneratorContext $context): self;
 }

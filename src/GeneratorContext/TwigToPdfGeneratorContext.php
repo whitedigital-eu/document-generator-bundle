@@ -2,7 +2,12 @@
 
 namespace WhiteDigital\DocumentGeneratorBundle\GeneratorContext;
 
-readonly class TwigToPdfGeneratorContext
+use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
+
+/**
+ * This class is used to add additional context to the TwigToPdfGenerator, such as header and footer templates.
+ */
+readonly class TwigToPdfGeneratorContext implements GeneratorContext
 {
     public function __construct(private ?string $headerTemplate = null, private ?string $footerTemplate = null)
     {

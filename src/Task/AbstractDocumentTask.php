@@ -6,6 +6,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use InvalidArgumentException;
 use Vich\UploaderBundle\FileAbstraction\ReplacingFile;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Generator;
+use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Task;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Transformer;
 use WhiteDigital\DocumentGeneratorBundle\Entity\Document;
@@ -83,7 +84,7 @@ abstract class AbstractDocumentTask implements Task
         return $this->generator;
     }
 
-    public function getGeneratorContext(): mixed
+    public function getGeneratorContext(): ?GeneratorContext
     {
         return null;
     }

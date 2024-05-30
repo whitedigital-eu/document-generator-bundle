@@ -66,9 +66,9 @@ AbstractDocumentTask requires 3 services:
 2. Generator - TwigToPdfGenerator from library or other defined one
 3. Transformer - service defined by you (more about it below)
 
-getRequiredFields
+getTransformerFields
 ```php
-public function getRequiredFields(): array
+public function getTransformerFields(): array
 {
     return [
         'field1' => 'string',
@@ -77,7 +77,7 @@ public function getRequiredFields(): array
                 'field2' => 'bool',
             ],
         ],
-    ]; // array of fields that Transformer MUST return
+    ]; // array of fields that Transformer can contain
 }
 ```
 getTemplatePath
@@ -101,16 +101,6 @@ public function getInputType(): string
     return 'array'; // what type of data does Transformer require as input
 }
 ```
-and one optional function could be defined:  
-getOptionalFields
-```php
-public function getOptionalFields(): array
-{
-    return [
-        'field3' => 'int',
-    ]; // array of fields that Transformer COULD also return
-}
-```
 2. Define new Transformer that implements TransformerInterface:  
 ```php
 class TestTransformer implements Transformer
@@ -128,11 +118,7 @@ class TestTransformer implements Transformer
     }
 }
 ```
-transformer MUST return an array of fields:  
-a. ALL from Task getRequiredFields,  
-b. NONE, SOME or ALL from getTransformedFields
-
-> ALL fields returned by transformer MUST be defined in either required or optional fields
+transformer can return none, some or all of the fields listed in getTransformedFields an array of fields
 
 3. Use generation
 Defined task can now be used as a service

@@ -6,6 +6,7 @@ use Exception;
 use RuntimeException;
 use Twig\Environment;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Generator;
+use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
 use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\TwigToPdfGeneratorContext;
 use WhiteDigital\DocumentGeneratorBundle\Service\HtmlToPdf;
 
@@ -49,7 +50,7 @@ class TwigToPdfGenerator implements Generator
         return $this;
     }
 
-    public function setGeneratorContext(mixed $context): Generator
+    public function setGeneratorContext(?GeneratorContext $context): Generator
     {
         if ($context instanceof TwigToPdfGeneratorContext) {
             $this->headerTemplate = $context->getHeaderTemplate();
