@@ -35,7 +35,9 @@ This will enable new `Document` api resource with `/api/documents` iri.
    defined task.  
    For now, package only comes with transformer that turns twig into pdf but this can be changed
    within project by creating your own transformers by implementing TransformerInterface
-3. Html to Pdf service - reusable service to generate pdf files from html. Here used
+3. Generator - class that produces a generated result (binary data of path to a file), from defined data, template and additional, optional context
+4. GeneratorContext - class that holds additional, optional context for generator to perform the document generation
+5. Html to Pdf service - reusable service to generate pdf files from html. Here used
    within transformer but can be used elsewhere. Uses gotenberg in background.
 
 ### Usage
