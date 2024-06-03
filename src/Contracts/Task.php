@@ -21,4 +21,6 @@ interface Task
     public function getType(): string;
 
     public function getInputType(): string;
+
+    public function getGeneratorContext(): ?GeneratorContext;
 }
