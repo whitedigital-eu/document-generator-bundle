@@ -14,10 +14,12 @@ use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
 use function array_diff;
 use function array_diff_key;
+use function array_filter;
 use function array_flip;
 use function array_key_exists;
 use function array_keys;
 use function count;
+use function explode;
 use function get_debug_type;
 use function implode;
 use function is_array;
@@ -26,6 +28,8 @@ use function preg_match;
 use function preg_match_all;
 use function preg_replace;
 use function sprintf;
+
+use const PHP_INT_MAX;
 
 abstract class AbstractDocumentTask implements Task
 {
@@ -110,10 +114,10 @@ abstract class AbstractDocumentTask implements Task
 
         foreach ($dataDump as $key => $value) {
             $check = $key;
-            if (preg_match('/\.\d+\./', $check) && preg_match('/[0-9]/', $check) > 0) {
+            if (preg_match('/\.\d+\./', $check) && preg_match('/\d+/', $check) > 0) {
                 preg_match_all('/\d+/', $check, $matches);
-                $check = preg_replace("/\d/", '0', $check);
-                if ('0' !== $matches[0][0] && isset($fullDump[$check])) {
+                $check = preg_replace("/\d+/", '0', $check);
+                if (isset($fullDump[$check]) && !empty(array_filter($matches, static fn ($arr) => array_filter($arr, static fn ($value) => '0' !== $value)))) {
                     $requiredCount++;
                 }
             }
@@ -135,9 +139,9 @@ abstract class AbstractDocumentTask implements Task
 
         foreach ($fullDump as $key => $value) {
             $check = $key;
-            if (preg_match('/\.\d+\./', $check) && preg_match('/[0-9]/', $check) > 0) {
+            if (preg_match('/\.\d+\./', $check) && preg_match('/\d+/', $check) > 0) {
                 preg_match_all('/\d+/', $check, $matches);
-                $check = preg_replace("/\d/", '0', $check);
+                $check = preg_replace("/\d+/", '0', $check);
                 if (!array_key_exists($check, $dataDump)) {
                     $requiredCount--;
                 }
