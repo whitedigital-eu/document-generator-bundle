@@ -16,8 +16,6 @@ interface Task
 
     public function generate(mixed $input): Document;
 
-    public function getTemplatePath(): string;
-
     public function getType(): string;
 
     public function getInputType(): string;

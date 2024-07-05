@@ -6,8 +6,6 @@ interface Generator
 {
     public function generate(): string;
 
-    public function setTemplate(string $template): self;
-
     public function setData(array $data): self;
 
     /**

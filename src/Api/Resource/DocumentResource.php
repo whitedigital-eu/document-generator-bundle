@@ -38,9 +38,9 @@ use WhiteDigital\StorageItemResource\Api\Resource\StorageItemResource;
 #[Mapping(Document::class)]
 class DocumentResource extends BaseResource
 {
-    public const PREFIX = 'document:';
+    public const string PREFIX = 'document:';
 
-    public const READ = self::PREFIX . 'read'; // document:read
+    public const string READ = self::PREFIX . 'read'; // document:read
 
     #[ApiProperty(identifier: true)]
     #[Groups([self::READ, ])]
@@ -57,9 +57,6 @@ class DocumentResource extends BaseResource
 
     #[Groups([self::READ, ])]
     public ?StorageItemResource $file = null;
-
-    #[Groups([self::READ, ])]
-    public ?string $templatePath = null;
 
     #[Groups([self::READ, ])]
     public ?DateTimeImmutable $createdAt = null;

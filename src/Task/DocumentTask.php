@@ -24,11 +24,6 @@ class DocumentTask extends AbstractDocumentTask
         return $this->getInput()->getSourceData();
     }
 
-    public function getTemplatePath(): string
-    {
-        return $this->getInput()->getTemplatePath();
-    }
-
     public function getType(): string
     {
         return $this->getInput()->getType();

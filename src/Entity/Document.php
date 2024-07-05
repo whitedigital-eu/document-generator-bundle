@@ -26,9 +26,6 @@ class Document extends BaseEntity
     #[ORM\Column(type: Types::JSON)]
     private ?array $templateData = null;
 
-    #[ORM\Column]
-    private ?string $templatePath = null;
-
     #[ORM\ManyToOne]
     private ?StorageItem $file = null;
 
@@ -76,18 +73,6 @@ class Document extends BaseEntity
     public function setFile(?StorageItem $file): self
     {
         $this->file = $file;
-
-        return $this;
-    }
-
-    public function getTemplatePath(): ?string
-    {
-        return $this->templatePath;
-    }
-
-    public function setTemplatePath(?string $templatePath): self
-    {
-        $this->templatePath = $templatePath;
 
         return $this;
     }

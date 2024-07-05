@@ -58,7 +58,6 @@ abstract class AbstractDocumentTask implements Task
 
         $result = $this->getGenerator()
             ->setData($data)
-            ->setTemplate($this->getTemplatePath())
             ->setGeneratorContext($this->getGeneratorContext())
             ->generate();
 
@@ -74,8 +73,7 @@ abstract class AbstractDocumentTask implements Task
             ->setType($this->getType())
             ->setSourceData(self::unpack($sourceDump))
             ->setTemplateData($data)
-            ->setFile($storageItem)
-            ->setTemplatePath($this->getTemplatePath());
+            ->setFile($storageItem);
 
         $this->em->persist($document);
         $this->em->flush();
