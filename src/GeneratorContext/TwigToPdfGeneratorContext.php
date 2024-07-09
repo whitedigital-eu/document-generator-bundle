@@ -6,7 +6,9 @@ use Gotenberg\Modules\ChromiumPdf;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
 
 /**
- * This class is used to add additional context to the TwigToPdfGenerator, such as header and footer templates.
+ * This class is used to set generator context for the TwigToPdfGenerator,
+ * such as twig template paths for main/header/footer and optional pdf configuration
+ * @see ChromiumPdf
  */
 readonly class TwigToPdfGeneratorContext implements GeneratorContext
 {

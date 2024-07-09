@@ -3,9 +3,14 @@
 namespace WhiteDigital\DocumentGeneratorBundle\Generator;
 
 use Exception;
+use Gotenberg\Exceptions\GotenbergApiErrored;
+use Gotenberg\Exceptions\NoOutputFileInResponse;
 use InvalidArgumentException;
 use RuntimeException;
 use Twig\Environment;
+use Twig\Error\LoaderError;
+use Twig\Error\RuntimeError;
+use Twig\Error\SyntaxError;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Generator;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
 use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\MultiLayoutTwigToPdfGeneratorContext;
@@ -25,30 +30,14 @@ class TwigToPdfGenerator implements Generator
     {
         try {
             if ($this->generatorContext instanceof TwigToPdfGeneratorContext) {
-                return $this->pdf->htmlToPdf(
-                    $this->twig->render($this->generatorContext->getTemplate(), $this->data),
-                    $this->generatorContext->getHeaderTemplate()
-                        ? $this->twig->render($this->generatorContext->getHeaderTemplate(), $this->data) : null,
-                    $this->generatorContext->getFooterTemplate()
-                        ? $this->twig->render($this->generatorContext->getFooterTemplate(), $this->data) : null,
-                    true,
-                    $this->generatorContext->getPdfConfiguration()
-                );
+                return $this->generatePdfWithContext($this->generatorContext);
             } elseif ($this->generatorContext instanceof MultiLayoutTwigToPdfGeneratorContext) {
                 $data = [];
                 foreach ($this->generatorContext->getLayouts() as $layout) {
-                    $data[] = $this->pdf->htmlToPdf(
-                        $this->twig->render($layout->getTemplate(), $this->data),
-                        $layout->getHeaderTemplate()
-                            ? $this->twig->render($layout->getHeaderTemplate(), $this->data) : null,
-                        $layout->getFooterTemplate()
-                            ? $this->twig->render($layout->getFooterTemplate(), $this->data) : null,
-                        false,
-                        $layout->getPdfConfiguration()
-                    );
+                    $data[] = $this->generatePdfWithContext($layout, false);
                 }
                 if ($data) {
-                    return $this->pdf->mergePdf(...$data);
+                    return $this->pdf->mergePdfs(...$data);
                 }
             }
             throw new InvalidArgumentException('Invalid generator context');
@@ -80,5 +69,25 @@ class TwigToPdfGenerator implements Generator
         $this->generatorContext = $context;
 
         return $this;
+    }
+
+    /**
+     * @throws NoOutputFileInResponse
+     * @throws RuntimeError
+     * @throws LoaderError
+     * @throws SyntaxError
+     * @throws GotenbergApiErrored
+     */
+    protected function generatePdfWithContext(TwigToPdfGeneratorContext $context, bool $saveAsFile = true): string
+    {
+        return $this->pdf->htmlToPdf(
+            html: $this->twig->render($context->getTemplate(), $this->data),
+            headerHtml: $context->getHeaderTemplate()
+                ? $this->twig->render($context->getHeaderTemplate(), $this->data) : null,
+            footerHtml: $context->getFooterTemplate()
+                ? $this->twig->render($context->getFooterTemplate(), $this->data) : null,
+            saveAsFile: $saveAsFile,
+            pdfConfiguration: $context->getPdfConfiguration()
+        );
     }
 }

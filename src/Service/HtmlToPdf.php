@@ -24,27 +24,27 @@ readonly class HtmlToPdf
      */
     public function htmlToPdf(
         string       $html,
-        ?string      $header = null,
-        ?string      $footer = null,
-        bool         $save = true,
+        ?string      $headerHtml = null,
+        ?string      $footerHtml = null,
+        bool         $saveAsFile = true,
         ?ChromiumPdf $pdfConfiguration = null
     ): string
     {
         if (!$pdfConfiguration) {
-            $pdfConfiguration = $this->gotenbergModuleFactory->createChromium()->pdf()->margins(0, 0, 0, 0);
+            $pdfConfiguration = $this->gotenbergModuleFactory->createPdf();
         }
 
-        if (null !== $header) {
-            $pdfConfiguration->header(Stream::string('header.html', $header));
+        if (null !== $headerHtml) {
+            $pdfConfiguration->header(Stream::string('header.html', $headerHtml));
         }
 
-        if (null !== $footer) {
-            $pdfConfiguration->footer(Stream::string('footer.html', $footer));
+        if (null !== $footerHtml) {
+            $pdfConfiguration->footer(Stream::string('footer.html', $footerHtml));
         }
 
         $request = $pdfConfiguration->html(Stream::string('index.html', $html));
 
-        if ($save) {
+        if ($saveAsFile) {
             $dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR;
 
             return $dir . Gotenberg::save($request, $dir);
@@ -57,14 +57,15 @@ readonly class HtmlToPdf
      * @throws NoOutputFileInResponse
      * @throws GotenbergApiErrored
      */
-    public function mergePdf(array $pdfs, bool $save = true): string
+    public function mergePdfs(array $pdfDataStrings, bool $save = true): string
     {
-
         $request = $this->gotenbergModuleFactory
             ->createPdfEngines()
             ->merge(
                 ...array_map(
-                    static fn(string $pdf, int $idx) => Stream::string("pdf-{$idx}.pdf", $pdf), $pdfs, array_keys($pdfs)
+                    static fn(string $pdf, int $idx) => Stream::string("pdf-$idx.pdf", $pdf),
+                    $pdfDataStrings,
+                    array_keys($pdfDataStrings)
                 )
             );
 

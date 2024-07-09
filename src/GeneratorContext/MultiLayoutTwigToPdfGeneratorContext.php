@@ -6,7 +6,8 @@ use InvalidArgumentException;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
 
 /**
- * This class is used to add additional context to the MultiLayoutTwigToPdfGenerator, such as header and footer templates.
+ * This class is used to set generator context for the TwigToPdfGenerator, in case it needs to generate multiple pdf
+ * page layouts and merge them into a single pdf file
  */
 readonly class MultiLayoutTwigToPdfGeneratorContext implements GeneratorContext
 {
@@ -18,9 +19,7 @@ readonly class MultiLayoutTwigToPdfGeneratorContext implements GeneratorContext
         foreach ($layouts as $layout) {
             if (!$layout instanceof TwigToPdfGeneratorContext) {
                 throw new InvalidArgumentException(
-                    sprintf(
-                        'All layouts must be instances of %s',
-                        TwigToPdfGeneratorContext::class)
+                    sprintf('All layouts must be instances of %s', TwigToPdfGeneratorContext::class)
                 );
             }
         }
