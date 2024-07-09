@@ -37,7 +37,7 @@ class TwigToPdfGenerator implements Generator
                     $data[] = $this->generatePdfWithContext($layout, false);
                 }
                 if ($data) {
-                    return $this->pdf->mergePdfs(...$data);
+                    return $this->pdf->mergePdfs($data);
                 }
             }
             throw new InvalidArgumentException('Invalid generator context');
