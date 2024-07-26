@@ -54,7 +54,9 @@ abstract class AbstractDocumentTask implements Task
         }
 
         $data = $this->getTransformer()->getTransformedFields($input);
-        $this->validate($data);
+        if ($this->isDataValidationEnabled()) {
+            $this->validate($data);
+        }
 
         $result = $this->getGenerator()
             ->setData($data)
@@ -207,4 +209,6 @@ abstract class AbstractDocumentTask implements Task
 
         return true;
     }
+
+    abstract public function isDataValidationEnabled(): bool;
 }

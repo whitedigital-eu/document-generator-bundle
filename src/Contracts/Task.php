@@ -21,4 +21,6 @@ interface Task
     public function getInputType(): string;
 
     public function getGeneratorContext(): ?GeneratorContext;
+
+    public function isDataValidationEnabled(): bool;
 }

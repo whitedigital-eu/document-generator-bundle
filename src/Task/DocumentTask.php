@@ -33,4 +33,9 @@ class DocumentTask extends AbstractDocumentTask
     {
         return Document::class;
     }
+
+    public function isDataValidationEnabled(): bool
+    {
+        return true;
+    }
 }
