@@ -3,6 +3,7 @@
 namespace WhiteDigital\DocumentGeneratorBundle\Task;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Persistence\Proxy;
 use InvalidArgumentException;
 use Vich\UploaderBundle\FileAbstraction\ReplacingFile;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Generator;
@@ -10,6 +11,7 @@ use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Task;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Transformer;
 use WhiteDigital\DocumentGeneratorBundle\Entity\Document;
+use WhiteDigital\EntityResourceMapper\Entity\BaseEntity;
 use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
 use function array_diff;
@@ -21,6 +23,7 @@ use function array_keys;
 use function count;
 use function explode;
 use function get_debug_type;
+use function get_object_vars;
 use function implode;
 use function is_array;
 use function ltrim;
@@ -48,6 +51,10 @@ abstract class AbstractDocumentTask implements Task
 
     final public function generate(mixed $input): Document
     {
+        if ($input instanceof Proxy || $input instanceof BaseEntity) {
+            $input = $this->getActualObject($input);
+        }
+
         $this->input = $input;
         if (get_debug_type($input) !== $this->getInputType()) {
             throw new InvalidArgumentException(sprintf('Incompatible input type. Expected: "%s", got: "%s"', $this->getInputType(), get_debug_type($input)));
@@ -101,6 +108,27 @@ abstract class AbstractDocumentTask implements Task
     public function getInput(): mixed
     {
         return $this->input;
+    }
+
+    protected function getActualObject(BaseEntity|Proxy $entity): BaseEntity
+    {
+        if ($entity instanceof Proxy) {
+            // Force initialization of the proxy
+            $this->em->getUnitOfWork()->initializeObject($entity);
+
+            // Access all properties to ensure they are loaded
+            foreach (get_object_vars($entity) as $property => $value) {
+                // Access the property to trigger loading
+                $entity->{$property};
+            }
+
+            // Detach and re-attach the entity to ensure it is fully initialized
+            $this->em->detach($entity);
+
+            return $this->em->getRepository($entity::class)->find($entity->getId());
+        }
+
+        return $entity;
     }
 
     protected function validate(array $data): void
