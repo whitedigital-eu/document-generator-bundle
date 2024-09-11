@@ -5,6 +5,7 @@ namespace WhiteDigital\DocumentGeneratorBundle\Task;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\Proxy;
 use InvalidArgumentException;
+use LogicException;
 use Vich\UploaderBundle\FileAbstraction\ReplacingFile;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Generator;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
@@ -27,6 +28,7 @@ use function get_object_vars;
 use function implode;
 use function is_array;
 use function ltrim;
+use function method_exists;
 use function preg_match;
 use function preg_match_all;
 use function preg_replace;
@@ -49,7 +51,7 @@ abstract class AbstractDocumentTask implements Task
     ) {
     }
 
-    final public function generate(mixed $input): Document
+    final public function generate(mixed $input, bool $flush = true): Document
     {
         if ($input instanceof Proxy || $input instanceof BaseEntity) {
             $input = $this->getActualObject($input);
@@ -85,7 +87,9 @@ abstract class AbstractDocumentTask implements Task
             ->setTemplatePath($this->getTemplatePath());
 
         $this->em->persist($document);
-        $this->em->flush();
+        if ($flush) {
+            $this->em->flush();
+        }
 
         return $document;
     }
@@ -110,19 +114,20 @@ abstract class AbstractDocumentTask implements Task
         return $this->input;
     }
 
-    protected function getActualObject(BaseEntity|Proxy $entity): BaseEntity
-    {
+    public function getActualObject(
+        object $entity,
+    ): object {
         if ($entity instanceof Proxy) {
-            // Force initialization of the proxy
             $this->em->getUnitOfWork()->initializeObject($entity);
 
-            // Access all properties to ensure they are loaded
+            if (!method_exists($entity, 'getId')) {
+                throw new LogicException('The entity does not have a getId method.');
+            }
+
             foreach (get_object_vars($entity) as $property => $value) {
-                // Access the property to trigger loading
                 $entity->{$property};
             }
 
-            // Detach and re-attach the entity to ensure it is fully initialized
             $this->em->detach($entity);
 
             return $this->em->getRepository($entity::class)->find($entity->getId());
