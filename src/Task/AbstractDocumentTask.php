@@ -51,7 +51,7 @@ abstract class AbstractDocumentTask implements Task
     ) {
     }
 
-    final public function generate(mixed $input, bool $flush = true): Document
+    final public function generate(mixed $input, bool $flush = true, bool $validate = true): Document
     {
         if ($input instanceof Proxy || $input instanceof BaseEntity) {
             $input = $this->getActualObject($input);
@@ -63,7 +63,9 @@ abstract class AbstractDocumentTask implements Task
         }
 
         $data = $this->getTransformer()->getTransformedFields($input);
-        $this->validate($data);
+        if ($validate) {
+            $this->validate($data);
+        }
 
         $result = $this->getGenerator()
             ->setData($data)
