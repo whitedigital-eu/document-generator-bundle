@@ -12,6 +12,7 @@ use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Task;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Transformer;
 use WhiteDigital\DocumentGeneratorBundle\Entity\Document;
+use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\DocumentGeneratorContext;
 use WhiteDigital\EntityResourceMapper\Entity\BaseEntity;
 use WhiteDigital\StorageItemResource\Entity\StorageItem;
 
@@ -43,6 +44,7 @@ abstract class AbstractDocumentTask implements Task
     protected ?string $type = null;
     protected ?string $inputType = null;
     protected mixed $input = null;
+    protected bool $validate = true;
 
     public function __construct(
         protected readonly EntityManagerInterface $em,
@@ -51,7 +53,7 @@ abstract class AbstractDocumentTask implements Task
     ) {
     }
 
-    final public function generate(mixed $input, bool $flush = true, bool $validate = true): Document
+    final public function generate(mixed $input, bool $flush = true): Document
     {
         if ($input instanceof Proxy || $input instanceof BaseEntity) {
             $input = $this->getActualObject($input);
@@ -63,13 +65,12 @@ abstract class AbstractDocumentTask implements Task
         }
 
         $data = $this->getTransformer()->getTransformedFields($input);
-        if ($validate) {
+        if ($this->getValidate()) {
             $this->validate($data);
         }
 
         $result = $this->getGenerator()
             ->setData($data)
-            ->setTemplate($this->getTemplatePath())
             ->setGeneratorContext($this->getGeneratorContext())
             ->generate();
 
@@ -85,8 +86,7 @@ abstract class AbstractDocumentTask implements Task
             ->setType($this->getType())
             ->setSourceData(self::unpack($sourceDump))
             ->setTemplateData($data)
-            ->setFile($storageItem)
-            ->setTemplatePath($this->getTemplatePath());
+            ->setFile($storageItem);
 
         $this->em->persist($document);
         if ($flush) {
@@ -103,7 +103,7 @@ abstract class AbstractDocumentTask implements Task
 
     public function getGeneratorContext(): ?GeneratorContext
     {
-        return null;
+        return new DocumentGeneratorContext();
     }
 
     public function getTransformer(): Transformer
@@ -136,6 +136,18 @@ abstract class AbstractDocumentTask implements Task
         }
 
         return $entity;
+    }
+
+    public function getValidate(): bool
+    {
+        return $this->validate;
+    }
+
+    public function setValidate(bool $validate): static
+    {
+        $this->validate = $validate;
+
+        return $this;
     }
 
     protected function validate(array $data): void

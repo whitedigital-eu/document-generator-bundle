@@ -59,9 +59,6 @@ class DocumentResource extends BaseResource
     public ?StorageItemResource $file = null;
 
     #[Groups([self::READ, ])]
-    public ?string $templatePath = null;
-
-    #[Groups([self::READ, ])]
     public ?DateTimeImmutable $createdAt = null;
 
     #[Groups([self::READ, ])]

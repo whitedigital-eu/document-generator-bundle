@@ -2,8 +2,9 @@
 
 namespace WhiteDigital\DocumentGeneratorBundle\Generator;
 
-use Exception;
-use RuntimeException;
+use Gotenberg\Exceptions\GotenbergApiErrored;
+use Gotenberg\Exceptions\NoOutputFileInResponse;
+use InvalidArgumentException;
 use Symfony\Component\Translation\LocaleSwitcher;
 use Twig\Environment;
 use Twig\Error\LoaderError;
@@ -11,16 +12,17 @@ use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\Generator;
 use WhiteDigital\DocumentGeneratorBundle\Contracts\GeneratorContext;
-use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\LocaleAwareGeneratorContext;
-use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\TwigToPdfGeneratorContext;
+use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\Traits\LocaleAware;
+use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\Traits\MultiLayoutTwigToPdf;
+use WhiteDigital\DocumentGeneratorBundle\GeneratorContext\Traits\TwigToPdf;
 use WhiteDigital\DocumentGeneratorBundle\Service\HtmlToPdf;
+
+use function class_uses;
 
 class TwigToPdfGenerator implements Generator
 {
-    protected ?string $template = null;
-    protected ?string $headerTemplate = null;
-    protected ?string $footerTemplate = null;
     protected ?string $locale = null;
+    protected ?GeneratorContext $context = null;
 
     protected array $data = [];
 
@@ -31,24 +33,31 @@ class TwigToPdfGenerator implements Generator
     ) {
     }
 
+    /**
+     * @throws NoOutputFileInResponse
+     * @throws RuntimeError
+     * @throws LoaderError
+     * @throws SyntaxError
+     * @throws GotenbergApiErrored
+     */
     public function generate(): string
     {
-        try {
-            return $this->pdf->htmlToPdf(
-                $this->render($this->template, $this->data),
-                $this->headerTemplate ? $this->render($this->headerTemplate, $this->data) : null,
-                $this->footerTemplate ? $this->render($this->footerTemplate, $this->data) : null,
-            );
-        } catch (Exception $exception) {
-            throw new RuntimeException($exception->getMessage(), $exception->getCode(), $exception);
+        if ($this->usesTrait(MultiLayoutTwigToPdf::class)) {
+            $data = [];
+            foreach ($this->context->getLayouts() as $layout) {
+                $data[] = $this->generatePdfWithContext($layout, false);
+            }
+
+            if ($data) {
+                return $this->pdf->mergePdfs($data);
+            }
         }
-    }
 
-    public function setTemplate(string $template): Generator
-    {
-        $this->template = $template;
+        if ($this->usesTrait(TwigToPdf::class)) {
+            return $this->generatePdfWithContext($this->context);
+        }
 
-        return $this;
+        throw new InvalidArgumentException('Invalid generator context');
     }
 
     public function setData(array $data): Generator
@@ -60,16 +69,29 @@ class TwigToPdfGenerator implements Generator
 
     public function setGeneratorContext(?GeneratorContext $context): Generator
     {
-        if ($context instanceof TwigToPdfGeneratorContext) {
-            $this->headerTemplate = $context->getHeaderTemplate();
-            $this->footerTemplate = $context->getFooterTemplate();
-        }
-
-        if ($context instanceof LocaleAwareGeneratorContext) {
-            $this->locale = $context->getLocale();
-        }
+        $this->context = $context;
 
         return $this;
+    }
+
+    /**
+     * @throws NoOutputFileInResponse
+     * @throws RuntimeError
+     * @throws LoaderError
+     * @throws SyntaxError
+     * @throws GotenbergApiErrored
+     */
+    protected function generatePdfWithContext(GeneratorContext $context, bool $saveAsFile = true): string
+    {
+        return $this->pdf->htmlToPdf(
+            html: $this->render($context->getTemplate(), $this->data),
+            headerHtml: $context->getHeaderTemplate()
+                ? $this->render($context->getHeaderTemplate(), $this->data) : null,
+            footerHtml: $context->getFooterTemplate()
+                ? $this->render($context->getFooterTemplate(), $this->data) : null,
+            saveAsFile: $saveAsFile,
+            pdfConfiguration: $context->getPdfConfiguration(),
+        );
     }
 
     /**
@@ -77,12 +99,41 @@ class TwigToPdfGenerator implements Generator
      * @throws RuntimeError
      * @throws LoaderError
      */
-    private function render($name, array $context = []): string
+    protected function render(string $name, array $context): string
     {
-        if (null !== $this->locale) {
-            $this->localeSwitcher->runWithLocale($this->locale, fn () => $this->twig->render($name, $context));
+        if ($this->usesTrait(LocaleAware::class)) {
+            return $this->localeSwitcher->runWithLocale($this->context->getLocale(), fn () => $this->twig->render($name, $context));
         }
 
         return $this->twig->render($name, $context);
+    }
+
+    private function classUsesRecursive(string $class): array
+    {
+        $results = [];
+
+        do {
+            foreach (class_uses($class) as $trait) {
+                $results[$trait] = $trait;
+                $results += $this->traitUsesRecursive($trait);
+            }
+        } while ($class = get_parent_class($class));
+
+        return $results;
+    }
+
+    private function traitUsesRecursive(string $trait): array
+    {
+        $traits = class_uses($trait);
+        foreach ($traits as $nestedTrait) {
+            $traits += $this->traitUsesRecursive($nestedTrait);
+        }
+
+        return $traits;
+    }
+
+    private function usesTrait(string $trait): bool
+    {
+        return in_array($trait, $this->classUsesRecursive($this->context::class), true);
     }
 }

@@ -9,7 +9,7 @@ use WhiteDigital\DocumentGeneratorBundle\Transformer\DocumentTransformer;
 
 class DocumentTask extends AbstractDocumentTask
 {
-    private ?Document $document = null;
+    protected ?Document $document = null;
 
     public function __construct(
         EntityManagerInterface $em,
@@ -22,11 +22,6 @@ class DocumentTask extends AbstractDocumentTask
     public function getTransformerFields(): array
     {
         return $this->getInput()->getSourceData();
-    }
-
-    public function getTemplatePath(): string
-    {
-        return $this->getInput()->getTemplatePath();
     }
 
     public function getType(): string
